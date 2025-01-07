@@ -13,7 +13,7 @@ except:
 
 menu = st.sidebar.selectbox("Menu", ["Submit Scores", "View Table/Charts"])
 
-
+#hello there
 if menu == "View Table/Charts":
     st.table(readcsv)
 

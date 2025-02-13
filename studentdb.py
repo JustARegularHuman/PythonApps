@@ -3,19 +3,46 @@
 
 
 import streamlit as st # type: ignore #webpage for my python app
-
 import pandas as pd
+import plotly.express as px #plot chats
 
 try:
     readcsv = pd.read_csv("scores.csv")
 except:
     readcsv = pd.DataFrame()
 
+studentID = "Student" + str(len(readcsv) + 1)
+
 menu = st.sidebar.selectbox("Menu", ["Submit Scores", "View Table/Charts"])
 
-#hello there
 if menu == "View Table/Charts":
-    st.table(readcsv)
+    # st.table(readcsv) simple table view
+    table = readcsv.to_html(index=False)
+    st.markdown(table, unsafe_allow_html=True)
+
+    subjects = ["Maths", "English", "Chemistry", "Biology", "Physics", "History"]
+    try:
+        subjectstable = readcsv[subjects].mean().reset_index()
+    except:
+        st.error("No data avaible")
+    #st.table(subjectstable)
+
+    st.write("")
+    st.write("")
+    choosechart = st.pills("Choose chart to plot", ["Bar Chart", "Pie Chart"])
+    if choosechart == "Bar Chart":
+        try:
+            barchart = px.bar(subjectstable, x="index", y=0, labels={"index": "Subject", "0": "Average"})
+            st.plotly_chart(barchart)
+        except:
+            st.error("No data avaible")
+
+    elif choosechart == "Pie Chart":
+        try:
+            piechart = px.pie(subjectstable, names="index", values=0, labels={"index": "Subject", "0": "Average"})
+            st.plotly_chart(piechart)
+        except:
+            st.error("No data avaible")
 
 if menu == "Submit Scores":
     st.subheader("Submit Students Scores")
@@ -54,17 +81,16 @@ if menu == "Submit Scores":
             break
 
     if st.button("Submit Student Score"):
-        if average >= 60:
+        if average >= 80:
             st.success(f"{name}, your total is: {totalscore}. Average is: {average}. Your grade is {grade}.")
-        elif average >= 50:
+        elif average >= 60:
              st.info(f"{name}, your total is: {totalscore}. Average is: {average}. Your grade is {grade}.")
         elif average >= 40:
              st.warning(f"{name}, your total is: {totalscore}. Average is: {average}. Your grade is {grade}.")
         else:
             st.error(f"{name}, your total is: {totalscore}. Average is: {average}. Your grade is {grade}.")
 
-        newstudentdict = {"Name": [name], "Maths": [math], "Chemistry": [chem], "Biology": [biology], "Physics": [physics], "History": [history], "Average": [average], "Grade": [grade]}
+        newstudentdict = {"StudentID": [studentID], "Name": [name], "Maths": [math], "English": [eng], "Chemistry": [chem], "Biology": [biology], "Physics": [physics], "History": [history], "Average": [average], "Grade": [grade]}
         newstudenttable = pd.DataFrame(newstudentdict)
-        st.table(newstudentdict)
         joinables = pd.concat([readcsv, newstudenttable], ignore_index = True)
         joinables.to_csv("scores.csv", index = False)
